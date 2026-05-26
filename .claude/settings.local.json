@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm /home/admin1/0526/222-2/index.html /home/admin1/0526/222-2/code.gs)",
+      "Bash(npx create-next-app@latest /home/admin1/0526/222-2 --typescript --tailwind --eslint --app --no-src-dir --import-alias \"@/*\" --yes)"
+    ]
+  }
+}
