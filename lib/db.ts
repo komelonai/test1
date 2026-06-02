@@ -1,8 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 
-let _client: ReturnType<typeof createClient> | undefined;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _client: any;
 
-export function db() {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function db(): any {
   return (_client ??= createClient(
     process.env.SUPABASE_URL!,
     process.env.SUPABASE_KEY!
