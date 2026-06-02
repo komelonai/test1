@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, initDb, type RsvpData } from "@/lib/db";
+import { db, type RsvpData } from "@/lib/db";
 import { calcAmount } from "@/lib/payment";
 
 export async function POST(req: NextRequest) {
@@ -13,26 +13,28 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    await initDb();
-
     const orderId = crypto.randomUUID();
     const requiresPayment = data.attendance === "참석";
     const companions = parseInt(data.companions) || 0;
     const paymentAmount = requiresPayment ? calcAmount(companions) : 0;
     const paymentStatus = requiresPayment ? "PENDING" : "NOT_REQUIRED";
 
-    await db()`
-      INSERT INTO rsvps
-        (order_id, name, org, jobtitle, phone, email, attendance,
-         companions, dietary, message, payment_amount, payment_status)
-      VALUES
-        (${orderId},
-         ${data.name}, ${data.org}, ${data.jobtitle}, ${data.phone},
-         ${data.email}, ${data.attendance},
-         ${companions},
-         ${data.dietary || null}, ${data.message || null},
-         ${paymentAmount}, ${paymentStatus})
-    `;
+    const { error } = await db().from("rsvps").insert({
+      order_id: orderId,
+      name: data.name,
+      org: data.org,
+      jobtitle: data.jobtitle,
+      phone: data.phone,
+      email: data.email,
+      attendance: data.attendance,
+      companions,
+      dietary: data.dietary || null,
+      message: data.message || null,
+      payment_amount: paymentAmount,
+      payment_status: paymentStatus,
+    });
+
+    if (error) throw new Error(error.message);
 
     return NextResponse.json({ orderId, requiresPayment, amount: paymentAmount });
   } catch (err) {

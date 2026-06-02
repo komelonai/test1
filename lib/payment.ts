@@ -11,7 +11,12 @@ export async function confirmPayment(
   orderId: string,
   amount: number,
 ) {
-  const [row] = await db()`SELECT payment_amount FROM rsvps WHERE order_id = ${orderId}`;
+  const { data: row } = await db()
+    .from("rsvps")
+    .select("payment_amount")
+    .eq("order_id", orderId)
+    .single();
+
   if (!row || Number(row.payment_amount) !== amount) {
     throw new Error("결제 금액이 일치하지 않습니다.");
   }
@@ -30,15 +35,19 @@ export async function confirmPayment(
 
   if (!tossRes.ok) {
     const err = await tossRes.json().catch(() => ({})) as { message?: string };
-    await db()`UPDATE rsvps SET payment_status = 'FAILED' WHERE order_id = ${orderId}`;
+    await db()
+      .from("rsvps")
+      .update({ payment_status: "FAILED" })
+      .eq("order_id", orderId);
     throw new Error(err.message ?? "결제 승인에 실패했습니다.");
   }
 
-  await db()`
-    UPDATE rsvps
-    SET payment_key    = ${paymentKey},
-        payment_status = 'DONE',
-        paid_at        = NOW()
-    WHERE order_id = ${orderId}
-  `;
+  await db()
+    .from("rsvps")
+    .update({
+      payment_key: paymentKey,
+      payment_status: "DONE",
+      paid_at: new Date().toISOString(),
+    })
+    .eq("order_id", orderId);
 }
